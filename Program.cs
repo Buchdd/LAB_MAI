@@ -1,6 +1,3 @@
-using System;
-using System.Security.Cryptography;
-
 class LAB_MAI
 {
     static void Main(string[] args)
@@ -22,11 +19,11 @@ class LAB_MAI
         Console.WriteLine("\n\n\n");
         MAI(unionAnalogs, weight, true);
 
-        //Console.WriteLine("\n\n\n");
-        //Console.WriteLine("МАИ+");
-        //Console.WriteLine("\n\n\n");
-        //MAIplus(Analogs, weight);
-        //MAIplus(unionAnalogs, weight);
+        Console.WriteLine("\n\n\n");
+        Console.WriteLine("МАИ+");
+        Console.WriteLine("\n\n\n");
+        MAIplus(Analogs, weight);
+        MAIplus(unionAnalogs, weight);
     }
 
     static double[,] CreatePCC(int[] weight)
@@ -203,7 +200,7 @@ class LAB_MAI
 
         List<ReleatedMAIMatrix> tempMatrix = new List<ReleatedMAIMatrix>();
 
-        for (int i = 0; i < Analog.GetLength(0); i++)
+        for (int i = 0; i < countCr; i++)
         {
             tempMatrix.Add(new ReleatedMAIMatrix(Analog, i));
         }
@@ -214,10 +211,87 @@ class LAB_MAI
         {
             for(int j = 0; j < countAl; j++)
             {
-                summaryTable[j, i] = tempMatrix[j].norm[i];
+                summaryTable[j, i] = tempMatrix[i].norm[j];
             }
         }
         PrintMatrix(summaryTable, "Смежная таблица");
+
+        double[,,] Bhatch = new double[countCr, countAl, countAl * 2];
+        for(int i = 0;i < countCr; i++)
+        {
+            for (int j = 0;j < countAl; j++)
+            {
+                for( int k = 0; k < countAl*2; k++)
+                {
+                    if(k%2 == 0)
+                    {
+                        Bhatch[i, j, k] = summaryTable[j, i];
+                        
+                    }
+                    else
+                    {
+                        Bhatch[i, j, k] = summaryTable[k / 2, i];
+                    }
+                }
+            }
+        }
+        PrintMatrix(Bhatch, "Матрицы B'");
+
+
+        double[,,] Bstar = new double[countCr, countAl, countAl * 2];
+        for (int i = 0; i < countCr; i++)
+        {
+            for (int j = 0; j < countAl; j++)
+            {
+                for (int k = 0; k < countAl * 2; k++)
+                {
+                    if (k % 2 == 0)
+                    {
+                        Bstar[i, j, k] = Bhatch[i,j,k]/(Bhatch[i,j,k]+Bhatch[i,j,k+1]);
+
+                    }
+                    else
+                    {
+                        Bstar[i, j, k] = Bhatch[i, j, k] / (Bhatch[i, j, k] + Bhatch[i, j, k - 1]);
+                    }
+                }
+            }
+        }
+        PrintMatrix(Bstar, "Матрицы B*  ");
+
+        double[,] B = new double[countAl, countAl * 2];
+        for (int i = 0; i < countAl; i++)
+        {
+            for (int j = 0; j < countAl*2; j++)
+            {
+                B[i, j] = 0;
+                for (int k = 0; k < countCr; k++)
+                {
+                    B[i,j] += norm[k] * Bstar[k,i,j];
+                }
+            }
+        }
+        PrintMatrix(B, "Матрицы B");
+
+        double[] resultW = new double[countAl];
+        double summResultW = 0;
+        double[] normRsultW = new double[countAl];
+        for (int i = 0;i < countAl; i++)
+        {
+            resultW[i] = 0;
+            for(int j = 0;j < countAl*2; j+=2)
+            {
+                resultW[i] += B[i, j];
+            }
+            summResultW += resultW[i];
+        }
+        for(int i = 0; i < countAl; i++)
+        {
+            normRsultW[i] = resultW[i]/summResultW;
+        }
+        PrintMatrix(resultW, "ResultW");
+        Console.WriteLine(summResultW);
+        PrintMatrix(normRsultW, "NormResultW");
     }
 
     static int[,] unionMatrixAnalog(int[,] Analogs, int[] newAnalog)
@@ -266,7 +340,6 @@ class LAB_MAI
         }
         Console.WriteLine();
     }
-
     static void PrintMatrix(double[,] matrix, string message)
     {
         int rows = matrix.GetLength(0);
@@ -294,6 +367,29 @@ class LAB_MAI
         for (int i = 0; i < rows; i++)
         {
             Console.Write($"{matrix[i].ToString("F4"),6} ");
+        }
+        Console.WriteLine();
+    }
+    static void PrintMatrix(double[,,] matrix, string message)
+    {
+        int table = matrix.GetLength(0);
+        int rows = matrix.GetLength(1);
+        int column = matrix.GetLength(2);
+
+        Console.WriteLine($"{message}:");
+
+        for (int i = 0; i < table; i++)
+        {
+            Console.WriteLine($"B{i}:");
+            for (int j = 0;j < rows; j++)
+            {
+                for(int k = 0; k < column; k++)
+                {
+                    Console.Write($"{matrix[i,j,k].ToString("F4"),6} ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
         }
         Console.WriteLine();
     }
