@@ -1,3 +1,5 @@
+using System.Diagnostics.Metrics;
+
 class LAB_MAI
 {
     static void Main(string[] args)
@@ -86,6 +88,26 @@ class LAB_MAI
         return Lmax;
     }
 
+    static double IS(ReleatedMAIMatrix test, int countAl)
+    {
+        double result =(double) (test.Lmax - countAl) / (countAl - 1);
+        return result;
+    }
+
+    static double OS(ReleatedMAIMatrix test, int countAl, double IS)
+    {
+        double result;
+        if (countAl == 3)
+        {
+            result = IS / 0.58;
+        }
+        else
+        {
+            result = IS / 0.9;
+        }
+        return result;
+    }
+
     static void MAI(int[,] Analog, int[] weight, Boolean print)
     {
         //Console.WriteLine(weight.Length);
@@ -95,6 +117,7 @@ class LAB_MAI
         double[] norm = CreateNorm(weight, middleGeom, summGeom);
         double Lmax = CreateLmax(weight, PCC, norm);
 
+
         if (print)
         {
             PrintMatrix(PCC, "PCC");
@@ -102,6 +125,8 @@ class LAB_MAI
             Console.WriteLine($"Сумма ср.геометр.");
             PrintMatrix(norm, "norm");
             Console.WriteLine($"Lmax: {Lmax}");
+
+            //Console.WriteLine($"ИС: {IS(tempMatrix, countAl)}");
         }           
 
         List< ReleatedMAIMatrix > tempMatrix = new List< ReleatedMAIMatrix >();
@@ -118,6 +143,11 @@ class LAB_MAI
                 Console.WriteLine("Сумма средних геом: " + tempMatrix[i].summGeom);
                 PrintMatrix(tempMatrix[i].norm, "norm");
                 Console.WriteLine("Lmax: " + tempMatrix[i].Lmax);
+
+                double Is = IS(tempMatrix[i], Analog.GetLength(1));
+                Console.WriteLine($"ИС: {Is}");
+
+                Console.WriteLine($"ОС: {OS(tempMatrix[i], Analog.GetLength(1), Is)}");
             }
         }
 
@@ -182,7 +212,7 @@ class LAB_MAI
                 {
                     summ += PCC[j, k];
                 }
-                Lmax += summ * norm[k];
+                Lmax += (double) summ * norm[k];
             }
         }
     }
